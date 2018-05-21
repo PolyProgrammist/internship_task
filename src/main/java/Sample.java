@@ -1,11 +1,11 @@
 import java.io.Serializable;
 
 public class Sample implements Serializable {
-    double[] x;
-    double y;
+    double[] row;
+    double val;
 
-    public Sample(double[] x, Double y) {
-        this.x = x;
-        this.y = y;
+    public Sample(double[] row, Double val) {
+        this.row = row;
+        this.val = val;
     }
 }

@@ -1,72 +1,95 @@
 import org.apache.spark.api.java.JavaRDD;
-import scala.Tuple2;
-
-import java.util.Arrays;
 
 public class GradientDescent {
     private JavaRDD<Sample> df;
+    private Double precision = null;
+    private Integer maxSteps = null;
+
     private double[] coeffs;
+    private double alpha = 1;
 
     public GradientDescent(JavaRDD<Sample> df) {
         this.df = df;
     }
 
-    private double[] newCoeffs(double[] coeffs) {
+    public GradientDescent(JavaRDD<Sample> df, Double precision) {
+        this.df = df;
+        this.precision = precision;
+    }
+
+    public GradientDescent(JavaRDD<Sample> df, Integer maxSteps) {
+        this.df = df;
+        this.maxSteps = maxSteps;
+    }
+
+    /**
+     * The main constructor.
+     * @param df The source of the data to find a local minimum
+     * @param precision The a such that the method will stop
+     *                  when the difference of rmse will be less than a
+     * @param maxSteps The maximum number of steps for method
+     */
+    public GradientDescent(JavaRDD<Sample> df, Double precision, Integer maxSteps) {
+        this.df = df;
+        this.precision = precision;
+        this.maxSteps = this.maxSteps;
+    }
+
+    /**
+     * Gradient descent implementation.
+     * @return double[] This method returns coefficients of the model.
+     */
+    public double[] getCoeffs() {
+        final long start = System.currentTimeMillis();
+        coeffs = new double[df.first().row.length];
+        for (int i = 0; i < coeffs.length; i++) {
+            coeffs[i] = 0.0;
+        }
+        int step = 0;
+        while (true) {
+            step++;
+            System.out.println("rmse: " + rmse(coeffs));
+            for (double t: coeffs) {
+                System.out.print(t + " ");
+            }
+            System.out.println();
+            double[] newcoeffs = newCoeffs(coeffs);
+            double dif = rmse(coeffs) - rmse(newcoeffs);
+            System.out.println("dif: " + dif);
+            System.out.println("step: " + step);
+            if (dif < 1e-5) {
+                break;
+            }
+            coeffs = newcoeffs;
+        }
+        final long stop = System.currentTimeMillis();
+        System.out.println("Time is: " + String.valueOf(stop - start));
+        return coeffs;
+    }
+
+    private double[] newCoeffs(double[] coeffs, double alpha) {
         double[] res = new double[coeffs.length];
-        final double alpha = 0.0000003;
         for (int i = 0; i < coeffs.length; i++) {
             res[i] = coeffs[i] + alpha / df.count() * sum(i);
         }
         return res;
     }
 
+    private double[] newCoeffs(double[] coeffs) {
+        double []res = newCoeffs(coeffs, alpha);
+        while (rmse(res) > rmse(coeffs)) {
+            alpha /= 2;
+            System.out.println("alpha: " + alpha);
+            res = newCoeffs(coeffs, alpha);
+        }
+        return res;
+    }
+
     private double sum(int j) {
-        double res = 0.0;
-        for (Sample s: df.collect()) {
-            res += (s.y - h(s.x)) * s.x[j];
-        }
-        return res;
+        return df.aggregate(0.0, new CalcGradient(this.coeffs, j), (a, b) -> a + b);
     }
 
-    private double h(double[] x, double[] coeffs) {
-        double res = 0.0;
-        for (int i = 0; i < x.length; i++) {
-            res += x[i] * coeffs[i];
-        }
-        return res;
-    }
-
-    private double h(double[] x) {
-        return h(x, coeffs);
-    }
-
-    private double rmse() {
-        double res = 0.0;
-        for (Sample s: df.collect()) {
-            double t = s.y - h(s.x);
-            res += t * t;
-        }
-        return res;
-    }
-
-    public void GetCoeffs() {
-        long start = System.currentTimeMillis();
-        coeffs = new double[df.first().x.length];
-        for (int i = 0; i < coeffs.length; i++) {
-            coeffs[i] = 0.0;
-        }
-
-        final int n = 10;
-        for (int i = 0; i < n; i++) {
-            System.out.println(rmse());
-            for (double t: coeffs){
-                System.out.print(t + " ");
-            }
-            System.out.println();
-            double[] newcoeffs = newCoeffs(coeffs);
-            coeffs = newcoeffs;
-        }
-        long stop = System.currentTimeMillis();
-        System.out.println("Time is: " + String.valueOf(stop - start));
+    private double rmse(double[] coeffs) {
+        return df.aggregate(0.0, new CalcRmse(coeffs), (a, b) -> a + b);
     }
 }
