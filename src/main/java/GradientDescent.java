@@ -8,8 +8,18 @@ public class GradientDescent {
     private double[] coeffs;
     private double alpha = 1;
 
+    /**
+     * Gradient Descent with default parameters.
+     * <li>
+     *     <ul>precision=1e-4</ul>
+     *     <ul>maxSteps=1000</ul>
+     * </li>
+     * @param df The source of the data to find a local minimum
+     */
     public GradientDescent(JavaRDD<Sample> df) {
         this.df = df;
+        maxSteps = 1000;
+        precision = 1e-4;
     }
 
     public GradientDescent(JavaRDD<Sample> df, Double precision) {
@@ -32,7 +42,7 @@ public class GradientDescent {
     public GradientDescent(JavaRDD<Sample> df, Double precision, Integer maxSteps) {
         this.df = df;
         this.precision = precision;
-        this.maxSteps = this.maxSteps;
+        this.maxSteps = maxSteps;
     }
 
     /**
@@ -57,7 +67,12 @@ public class GradientDescent {
             double dif = rmse(coeffs) - rmse(newcoeffs);
             System.out.println("dif: " + dif);
             System.out.println("step: " + step);
-            if (dif < 1e-5) {
+            if (precision != null && dif < precision) {
+                System.out.println("precision achieved");
+                break;
+            }
+            if (maxSteps != null && step >= maxSteps) {
+                System.out.println("steps achieved");
                 break;
             }
             coeffs = newcoeffs;
