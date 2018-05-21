@@ -2,8 +2,8 @@
 
 The distributed gradient descent with Apache Spark on Java
 
-Show - презентация
+Show.pdf - презентация
 
-Report - отчет
+Report.docx - отчет
 
 Средство сборки - maven
