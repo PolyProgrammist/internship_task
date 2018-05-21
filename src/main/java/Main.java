@@ -16,8 +16,8 @@ public class Main {
 
         GradientDescent gd = new GradientDescent(
                 StringToSampleRdd.convert(
-                        sc.textFile("testdata/learn.csv")
-                )
+                        sc.textFile("testdata/learn2.csv")
+                ), 100
         );
         gd.getCoeffs();
     }

@@ -85,7 +85,7 @@ public class GradientDescent {
     private double[] newCoeffs(double[] coeffs, double alpha) {
         double[] res = new double[coeffs.length];
         for (int i = 0; i < coeffs.length; i++) {
-            res[i] = coeffs[i] + alpha / df.count() * sum(i);
+            res[i] = coeffs[i] + alpha / df.count() * gradient(i);
         }
         return res;
     }
@@ -100,7 +100,7 @@ public class GradientDescent {
         return res;
     }
 
-    private double sum(int j) {
+    private double gradient(int j) {
         return df.aggregate(0.0, new CalcGradient(this.coeffs, j), (a, b) -> a + b);
     }
 
